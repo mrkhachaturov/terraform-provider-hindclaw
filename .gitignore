@@ -1,0 +1,8 @@
+terraform-provider-hindclaw
+*.exe
+dist/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
