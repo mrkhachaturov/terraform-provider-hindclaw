@@ -34,13 +34,13 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Extract release notes from changelog
-        run: bash .github/scripts/extract-release-notes.sh "${GITHUB_REF_NAME}" CHANGELOG.md .release-notes.md
+        run: bash .github/scripts/extract-release-notes.sh "${GITHUB_REF_NAME}" CHANGELOG.md "${RUNNER_TEMP}/release-notes.md"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
-          args: release --clean --release-notes=.release-notes.md
+          version: "~> v2"
+          args: release --clean --release-notes="${RUNNER_TEMP}/release-notes.md"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ secrets.GPG_FINGERPRINT }}
