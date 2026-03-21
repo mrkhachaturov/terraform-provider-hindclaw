@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go"
 
@@ -213,7 +214,10 @@ func (r *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	// Read back full state from server
-	r.readGroupIntoState(ctx, plan.ID.ValueString(), &plan, &resp.Diagnostics)
+	if notFound := r.readGroupIntoState(ctx, plan.ID.ValueString(), &plan, &resp.Diagnostics); notFound {
+		resp.Diagnostics.AddError("Error reading group after create", "Group not found immediately after creation")
+		return
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -232,7 +236,10 @@ func (r *groupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	r.readGroupIntoState(ctx, state.ID.ValueString(), &state, &resp.Diagnostics)
+	if notFound := r.readGroupIntoState(ctx, state.ID.ValueString(), &state, &resp.Diagnostics); notFound {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -295,7 +302,9 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	} else {
 		updateReq.SetRecallMaxTokensNil()
 	}
-	// List fields: set or clear
+	// List fields: set value or send empty slice to clear.
+	// The generated client omits nil slices from JSON (nil = "leave unchanged").
+	// An empty slice serializes as [] which tells the server to clear the field.
 	if !plan.RetainTags.IsNull() {
 		var tags []string
 		diags = plan.RetainTags.ElementsAs(ctx, &tags, false)
@@ -304,7 +313,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			updateReq.SetRetainTags(tags)
 		}
 	} else {
-		updateReq.SetRetainTags(nil)
+		updateReq.SetRetainTags([]string{})
 	}
 	if !plan.RetainRoles.IsNull() {
 		var roles []string
@@ -314,7 +323,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			updateReq.SetRetainRoles(roles)
 		}
 	} else {
-		updateReq.SetRetainRoles(nil)
+		updateReq.SetRetainRoles([]string{})
 	}
 	if !plan.ExcludeProviders.IsNull() {
 		var providers []string
@@ -324,7 +333,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			updateReq.SetExcludeProviders(providers)
 		}
 	} else {
-		updateReq.SetExcludeProviders(nil)
+		updateReq.SetExcludeProviders([]string{})
 	}
 	if !plan.RecallTagGroups.IsNull() {
 		var tagGroups []map[string]interface{}
@@ -334,7 +343,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 		updateReq.SetRecallTagGroups(tagGroups)
 	} else {
-		updateReq.SetRecallTagGroups(nil)
+		updateReq.SetRecallTagGroups([]map[string]interface{}{})
 	}
 
 	_, _, err := r.client.DefaultAPI.UpdateGroup(ctx, plan.ID.ValueString()).UpdateGroupRequest(*updateReq).Execute()
@@ -344,7 +353,10 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	// Read back full state
-	r.readGroupIntoState(ctx, plan.ID.ValueString(), &plan, &resp.Diagnostics)
+	if notFound := r.readGroupIntoState(ctx, plan.ID.ValueString(), &plan, &resp.Diagnostics); notFound {
+		resp.Diagnostics.AddError("Error reading group after update", "Group not found immediately after update")
+		return
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -373,12 +385,15 @@ func (r *groupResource) ImportState(ctx context.Context, req resource.ImportStat
 }
 
 // readGroupIntoState fetches the group from the API and populates the model.
-// Uses diag.Diagnostics directly so it works from both Create and Read responses.
-func (r *groupResource) readGroupIntoState(ctx context.Context, groupID string, state *groupResourceModel, diags *diag.Diagnostics) {
-	group, _, err := r.client.DefaultAPI.GetGroup(ctx, groupID).Execute()
+// Returns true if the group was not found (404), so callers can remove from state.
+func (r *groupResource) readGroupIntoState(ctx context.Context, groupID string, state *groupResourceModel, diags *diag.Diagnostics) (notFound bool) {
+	group, httpResp, err := r.client.DefaultAPI.GetGroup(ctx, groupID).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return true
+		}
 		diags.AddError("Error reading group", err.Error())
-		return
+		return false
 	}
 
 	state.ID = types.StringValue(group.Id)
@@ -456,10 +471,11 @@ func (r *groupResource) readGroupIntoState(ctx context.Context, groupID string, 
 		jsonBytes, err := json.Marshal(group.RecallTagGroups)
 		if err != nil {
 			diags.AddError("Error marshaling recall_tag_groups", err.Error())
-			return
+			return false
 		}
 		state.RecallTagGroups = types.StringValue(string(jsonBytes))
 	} else {
 		state.RecallTagGroups = types.StringNull()
 	}
+	return false
 }

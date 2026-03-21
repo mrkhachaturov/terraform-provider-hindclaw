@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go"
 
@@ -116,8 +117,12 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	user, _, err := r.client.DefaultAPI.GetUser(ctx, state.ID.ValueString()).Execute()
+	user, httpResp, err := r.client.DefaultAPI.GetUser(ctx, state.ID.ValueString()).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading user", err.Error())
 		return
 	}
