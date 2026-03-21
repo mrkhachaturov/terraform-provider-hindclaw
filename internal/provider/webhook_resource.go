@@ -74,6 +74,7 @@ func (r *webhookResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"enabled": schema.BoolAttribute{
 				Description: "Whether the webhook is enabled (default true).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"secret": schema.StringAttribute{
 				Description: "Webhook secret for signature verification. Preserved in state, may not be returned by API.",
@@ -132,7 +133,6 @@ func (r *webhookResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	plan.BankID = types.StringValue(plan.BankID.ValueString())
 	plan.ID = types.StringValue(webhook.Id)
 	plan.URL = types.StringValue(webhook.Url)
 	plan.Enabled = types.BoolValue(webhook.Enabled)

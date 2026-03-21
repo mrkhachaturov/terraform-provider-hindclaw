@@ -83,26 +83,17 @@ func (r *bankConfigResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	updates := make(map[string]interface{})
-	var configMap map[string]string
-	diags = plan.Config.ElementsAs(ctx, &configMap, false)
-	resp.Diagnostics.Append(diags...)
+	configReq, err := r.buildConfigUpdate(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	for k, v := range configMap {
-		updates[k] = v
-	}
 
-	configReq := hindsight.NewBankConfigUpdate(updates)
-
-	_, _, err := r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
+	_, _, err = r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating bank config", err.Error())
 		return
 	}
 
-	// Read back overrides
 	if notFound := r.readOverridesIntoState(ctx, plan.BankID.ValueString(), &plan, &resp.Diagnostics); notFound {
 		resp.Diagnostics.AddError("Error reading bank config after create", "Bank not found")
 		return
@@ -145,20 +136,20 @@ func (r *bankConfigResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	updates := make(map[string]interface{})
-	var configMap map[string]string
-	diags = plan.Config.ElementsAs(ctx, &configMap, false)
-	resp.Diagnostics.Append(diags...)
+	// UpdateBankConfig is PATCH (merge), so removing a key from Terraform config
+	// won't clear it on the server. Reset first, then re-apply desired overrides.
+	_, _, err := r.client.BanksAPI.ResetBankConfig(ctx, plan.BankID.ValueString()).Execute()
+	if err != nil {
+		resp.Diagnostics.AddError("Error resetting bank config before update", err.Error())
+		return
+	}
+
+	configReq, err := r.buildConfigUpdate(ctx, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	for k, v := range configMap {
-		updates[k] = v
-	}
 
-	configReq := hindsight.NewBankConfigUpdate(updates)
-
-	_, _, err := r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
+	_, _, err = r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating bank config", err.Error())
 		return
@@ -196,6 +187,20 @@ func (r *bankConfigResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *bankConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("bank_id"), req, resp)
+}
+
+func (r *bankConfigResource) buildConfigUpdate(ctx context.Context, plan *bankConfigResourceModel, diags *diag.Diagnostics) (*hindsight.BankConfigUpdate, error) {
+	updates := make(map[string]interface{})
+	var configMap map[string]string
+	d := plan.Config.ElementsAs(ctx, &configMap, false)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to parse config map")
+	}
+	for k, v := range configMap {
+		updates[k] = v
+	}
+	return hindsight.NewBankConfigUpdate(updates), nil
 }
 
 // readOverridesIntoState reads the Overrides map (not resolved Config) from the API.

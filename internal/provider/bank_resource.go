@@ -62,14 +62,17 @@ func (r *bankResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"name": schema.StringAttribute{
 				Description: "Bank display name.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"mission": schema.StringAttribute{
 				Description: "The agent's mission.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"background": schema.StringAttribute{
 				Description: "Background context for the agent.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"reflect_mission": schema.StringAttribute{
 				Description: "Custom reflect mission. Write-only (not returned by GetBankProfile).",
@@ -90,14 +93,17 @@ func (r *bankResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"disposition_skepticism": schema.Int64Attribute{
 				Description: "Skepticism (1=trusting, 5=skeptical).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"disposition_literalism": schema.Int64Attribute{
 				Description: "Literalism (1=flexible, 5=literal).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"disposition_empathy": schema.Int64Attribute{
 				Description: "Empathy (1=detached, 5=empathetic).",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

@@ -77,7 +77,9 @@ func (d *banksDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	var state banksDataSourceModel
+	state := banksDataSourceModel{
+		Banks: make([]bankItemModel, 0, len(bankList.Banks)),
+	}
 	for _, b := range bankList.Banks {
 		item := bankItemModel{
 			BankID: types.StringValue(b.BankId),
