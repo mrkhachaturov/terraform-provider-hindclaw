@@ -75,10 +75,12 @@ func (r *directiveResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"priority": schema.Int64Attribute{
 				Description: "Priority (default 0).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"is_active": schema.BoolAttribute{
 				Description: "Whether the directive is active (default true).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"tags": schema.ListAttribute{
 				Description: "Tags.",

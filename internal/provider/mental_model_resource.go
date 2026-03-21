@@ -77,8 +77,9 @@ func (r *mentalModelResource) Schema(_ context.Context, _ resource.SchemaRequest
 				ElementType: types.StringType,
 			},
 			"max_tokens": schema.Int64Attribute{
-				Description: "Max tokens for the model content.",
+				Description: "Max tokens for the model content (default 2048).",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

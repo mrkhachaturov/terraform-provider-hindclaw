@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	hindsight "github.com/vectorize-io/hindsight/hindsight-clients/go"
 
@@ -31,7 +30,7 @@ func NewBankConfigResource() resource.Resource {
 
 type bankConfigResourceModel struct {
 	BankID types.String `tfsdk:"bank_id"`
-	Config types.Map    `tfsdk:"config"`
+	Config types.String `tfsdk:"config"`
 }
 
 type bankConfigResource struct {
@@ -53,10 +52,9 @@ func (r *bankConfigResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"config": schema.MapAttribute{
-				Description: "Configuration key-value overrides.",
+			"config": schema.StringAttribute{
+				Description: "Configuration overrides as JSON object. Use jsonencode() to set typed values.",
 				Required:    true,
-				ElementType: types.StringType,
 			},
 		},
 	}
@@ -192,33 +190,12 @@ func (r *bankConfigResource) ImportState(ctx context.Context, req resource.Impor
 }
 
 func (r *bankConfigResource) buildConfigUpdate(ctx context.Context, plan *bankConfigResourceModel, diags *diag.Diagnostics) (*hindsight.BankConfigUpdate, error) {
-	updates := make(map[string]interface{})
-	var configMap map[string]string
-	d := plan.Config.ElementsAs(ctx, &configMap, false)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, fmt.Errorf("failed to parse config map")
-	}
-	for k, v := range configMap {
-		updates[k] = parseTypedValue(v)
+	var updates map[string]interface{}
+	if err := json.Unmarshal([]byte(plan.Config.ValueString()), &updates); err != nil {
+		diags.AddError("Invalid config JSON", err.Error())
+		return nil, err
 	}
 	return hindsight.NewBankConfigUpdate(updates), nil
-}
-
-// parseTypedValue attempts to recover the native JSON type from a string value.
-// Terraform map(string) forces all values to strings, but the API expects typed
-// values (bool, int, float). Try parsing in order: bool, int, float, then string.
-func parseTypedValue(s string) interface{} {
-	if b, err := strconv.ParseBool(s); err == nil {
-		return b
-	}
-	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
-		return i
-	}
-	if f, err := strconv.ParseFloat(s, 64); err == nil {
-		return f
-	}
-	return s
 }
 
 // readOverridesIntoState reads the Overrides map (not resolved Config) from the API.
@@ -233,25 +210,12 @@ func (r *bankConfigResource) readOverridesIntoState(ctx context.Context, bankID 
 		return false
 	}
 
-	// Store only Overrides, not the resolved Config (which includes inherited defaults).
-	// Use JSON encoding for consistent round-trip (preserves type info as strings).
-	overrides := make(map[string]string)
-	for k, v := range bankConfig.Overrides {
-		b, err := json.Marshal(v)
-		if err != nil {
-			overrides[k] = fmt.Sprintf("%v", v)
-			continue
-		}
-		// Unquote strings to match Terraform input (user writes "gpt-4o", not "\"gpt-4o\"")
-		s := string(b)
-		if unq, err := strconv.Unquote(s); err == nil {
-			s = unq
-		}
-		overrides[k] = s
+	// Store only Overrides as JSON, not the resolved Config (which includes inherited defaults).
+	jsonBytes, err := json.Marshal(bankConfig.Overrides)
+	if err != nil {
+		diags.AddError("Error marshaling overrides", err.Error())
+		return false
 	}
-
-	mapVal, d := types.MapValueFrom(ctx, types.StringType, overrides)
-	diags.Append(d...)
-	state.Config = mapVal
+	state.Config = types.StringValue(string(jsonBytes))
 	return false
 }
