@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check formatting
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "The following files need gofmt:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Unit tests
+        run: go test ./... -v
+
+      - name: Build
+        run: go build ./...
+
+      - name: Regenerate docs and examples
+        run: go generate ./...
+
+      - name: Ensure generated files are committed
+        run: git diff --exit-code

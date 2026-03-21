@@ -14,6 +14,7 @@ import (
 )
 
 var version string = "dev"
+var commit string = ""
 
 func main() {
 	var debug bool
@@ -21,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "hindclaw.pro/mrkhachaturov/hindclaw",
+		Address: "registry.terraform.io/mrkhachaturov/hindclaw",
 		Debug:   debug,
 	}
 

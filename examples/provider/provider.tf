@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     hindclaw = {
-      source = "hindclaw.pro/mrkhachaturov/hindclaw"
+      source = "mrkhachaturov/hindclaw"
     }
   }
 }

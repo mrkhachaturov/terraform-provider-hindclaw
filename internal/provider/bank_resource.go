@@ -27,17 +27,17 @@ func NewBankResource() resource.Resource {
 }
 
 type bankResourceModel struct {
-	BankID                 types.String `tfsdk:"bank_id"`
-	Name                   types.String `tfsdk:"name"`
-	Mission                types.String `tfsdk:"mission"`
-	Background             types.String `tfsdk:"background"`
-	ReflectMission         types.String `tfsdk:"reflect_mission"`
-	RetainMission          types.String `tfsdk:"retain_mission"`
-	EnableObservations     types.Bool   `tfsdk:"enable_observations"`
-	ObservationsMission    types.String `tfsdk:"observations_mission"`
-	DispositionSkepticism  types.Int64  `tfsdk:"disposition_skepticism"`
-	DispositionLiteralism  types.Int64  `tfsdk:"disposition_literalism"`
-	DispositionEmpathy     types.Int64  `tfsdk:"disposition_empathy"`
+	BankID                types.String `tfsdk:"bank_id"`
+	Name                  types.String `tfsdk:"name"`
+	Mission               types.String `tfsdk:"mission"`
+	Background            types.String `tfsdk:"background"`
+	ReflectMission        types.String `tfsdk:"reflect_mission"`
+	RetainMission         types.String `tfsdk:"retain_mission"`
+	EnableObservations    types.Bool   `tfsdk:"enable_observations"`
+	ObservationsMission   types.String `tfsdk:"observations_mission"`
+	DispositionSkepticism types.Int64  `tfsdk:"disposition_skepticism"`
+	DispositionLiteralism types.Int64  `tfsdk:"disposition_literalism"`
+	DispositionEmpathy    types.Int64  `tfsdk:"disposition_empathy"`
 }
 
 type bankResource struct {

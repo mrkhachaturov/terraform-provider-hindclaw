@@ -15,7 +15,7 @@ Manage Hindsight memory banks and Hindclaw access control.
 terraform {
   required_providers {
     hindclaw = {
-      source = "hindclaw.pro/mrkhachaturov/hindclaw"
+      source = "mrkhachaturov/hindclaw"
     }
   }
 }
