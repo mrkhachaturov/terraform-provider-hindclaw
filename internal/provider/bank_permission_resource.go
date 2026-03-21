@@ -354,15 +354,15 @@ func (r *bankPermissionResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *bankPermissionResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *bankPermissionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.SplitN(req.ID, "/", 3)
 	if len(parts) != 3 {
 		resp.Diagnostics.AddError("Invalid import ID", "Expected format: {bank_id}/{scope_type}/{scope_id}")
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("bank_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("scope_type"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("scope_id"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("bank_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_id"), parts[2])...)
 }
 
 func (r *bankPermissionResource) readPermissionIntoState(ctx context.Context, state *bankPermissionResourceModel, diags *diag.Diagnostics) (notFound bool) {

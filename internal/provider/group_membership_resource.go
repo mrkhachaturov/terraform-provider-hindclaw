@@ -158,12 +158,12 @@ func (r *groupMembershipResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *groupMembershipResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *groupMembershipResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.SplitN(req.ID, "/", 2)
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Invalid import ID", "Expected format: {group_id}/{user_id}")
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("group_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("user_id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_id"), parts[1])...)
 }

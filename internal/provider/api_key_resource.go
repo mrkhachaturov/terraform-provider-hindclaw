@@ -51,8 +51,11 @@ func (r *apiKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "Key description.",
+				Description: "Key description. Changing forces recreation.",
 				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"id": schema.StringAttribute{
 				Description: "Key identifier (computed by server).",

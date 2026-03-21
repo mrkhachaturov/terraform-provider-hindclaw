@@ -198,13 +198,13 @@ func (r *strategyScopeResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *strategyScopeResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *strategyScopeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.SplitN(req.ID, "/", 3)
 	if len(parts) != 3 {
 		resp.Diagnostics.AddError("Invalid import ID", "Expected format: {bank_id}/{scope_type}/{scope_value}")
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("bank_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("scope_type"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("scope_value"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("bank_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_value"), parts[2])...)
 }

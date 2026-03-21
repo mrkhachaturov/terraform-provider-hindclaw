@@ -169,13 +169,13 @@ func (r *userChannelResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *userChannelResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *userChannelResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.SplitN(req.ID, "/", 3)
 	if len(parts) != 3 {
 		resp.Diagnostics.AddError("Invalid import ID", "Expected format: {user_id}/{channel_provider}/{sender_id}")
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("user_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("channel_provider"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("sender_id"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("channel_provider"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("sender_id"), parts[2])...)
 }
