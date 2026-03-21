@@ -190,6 +190,8 @@ func (r *directiveResource) Update(ctx context.Context, req resource.UpdateReque
 		diags = plan.Tags.ElementsAs(ctx, &tags, false)
 		resp.Diagnostics.Append(diags...)
 		updateReq.SetTags(tags)
+	} else {
+		updateReq.SetTags([]string{})
 	}
 
 	directive, _, err := r.client.DirectivesAPI.UpdateDirective(ctx, plan.BankID.ValueString(), plan.ID.ValueString()).UpdateDirectiveRequest(*updateReq).Execute()

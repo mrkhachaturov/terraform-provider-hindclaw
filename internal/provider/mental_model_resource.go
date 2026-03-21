@@ -188,6 +188,8 @@ func (r *mentalModelResource) Update(ctx context.Context, req resource.UpdateReq
 		diags = plan.Tags.ElementsAs(ctx, &tags, false)
 		resp.Diagnostics.Append(diags...)
 		updateReq.SetTags(tags)
+	} else {
+		updateReq.SetTags([]string{})
 	}
 	if !plan.MaxTokens.IsNull() {
 		updateReq.SetMaxTokens(int32(plan.MaxTokens.ValueInt64()))
