@@ -179,24 +179,9 @@ export HINDCLAW_API_KEY="hc_test_xxxxx"
 make testacc
 ```
 
-## Release Workflow
+## Releases
 
-This repository is ready for release automation with:
-
-- [`.goreleaser.yml`](.goreleaser.yml) for multi-platform provider archives
-- [`terraform-registry-manifest.json`](terraform-registry-manifest.json) for registry protocol metadata
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for build, test, and generation checks
-- [`.github/workflows/release.yml`](.github/workflows/release.yml) for signed tagged releases
-
-Release flow:
-
-1. Commit and push changes to `main`.
-2. Run `make release-check`.
-3. Tag a release such as `v0.1.0`.
-4. Push the tag to GitHub.
-5. GitHub Actions builds provider archives, checksums, signatures, and the GitHub Release using the matching section from [CHANGELOG.md](CHANGELOG.md) as the release notes.
-
-The release workflow publishes artifacts to GitHub Releases. Terraform Registry and OpenTofu Registry still require the normal one-time provider registration/publication flow on their side.
+This repository includes automated CI, generated documentation, and tagged GitHub releases for provider distribution. Maintainer-oriented release steps and registry publication notes are documented in [RELEASING.md](RELEASING.md).
 
 ## Repository Layout
 

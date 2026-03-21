@@ -2,17 +2,22 @@
 
 This repository is licensed under [MPL-2.0](LICENSE).
 
-It is developed against, and distributed alongside metadata for, software and client libraries from the following upstream projects:
+It interoperates with, depends on, and was developed alongside software from the following upstream projects. Those upstream components remain governed by their own licenses.
 
 ## Hindsight
 
 - Project: Hindsight
-- Upstream location: `github.com/vectorize-io/hindsight` and local upstream mirror `build/hindsight/.upstream`
-- Upstream license: MIT
-- Upstream license file: `build/hindsight/.upstream/LICENSE`
-- Copyright: `Copyright (c) 2025 Vectorize AI, Inc.`
+- Upstream: Vectorize AI, Inc.
+- Repository: `https://github.com/vectorize-io/hindsight`
+- License: MIT
 
-The upstream Hindsight license text is reproduced below:
+Copyright:
+
+```text
+Copyright (c) 2025 Vectorize AI, Inc.
+```
+
+License text:
 
 ```text
 MIT License
@@ -38,14 +43,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## Hindclaw Workspace
+## Hindclaw Workspace Components
 
-- Workspace location: `build/hindclaw`
-- Workspace license: MIT
-- Workspace license file: `build/hindclaw/LICENSE`
-- Copyright: `Copyright (c) 2026 Ruben Khachaturov`
+- Project: Hindclaw workspace components and generated clients used by this provider
+- Author: Ruben Khachaturov
+- Repository: `https://github.com/mrkhachaturov/hindclaw`
+- License: MIT
 
-The workspace license text is reproduced below:
+Copyright:
+
+```text
+Copyright (c) 2026 Ruben Khachaturov
+
+Based on @vectorize-io/hindsight-openclaw
+Copyright (c) 2025 Vectorize AI, Inc.
+```
+
+License text:
 
 ```text
 MIT License
@@ -76,6 +90,6 @@ SOFTWARE.
 
 ## Notes
 
-- This file is intended to preserve clear attribution and license visibility for upstream projects used by or closely related to this provider.
-- Third-party dependencies pulled through Go modules may carry their own licenses and notices; those remain governed by their respective upstream terms.
-- If additional upstream source files are copied or substantially adapted into this repository in the future, their attribution should be preserved here and, where appropriate, in file-level comments.
+- This file is intended to preserve clear attribution and license visibility for upstream projects relevant to this provider.
+- Go module dependencies and other third-party packages remain governed by their respective upstream licenses.
+- If source files are copied or substantially adapted from an upstream project in the future, their attribution should be preserved here and, where appropriate, in file-level notices.
