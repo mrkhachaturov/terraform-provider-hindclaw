@@ -134,9 +134,16 @@ func (p *hindclawProvider) Resources(_ context.Context) []func() resource.Resour
 	return []func() resource.Resource{
 		NewUserResource,
 		NewGroupResource,
+		NewUserChannelResource,
+		NewGroupMembershipResource,
+		NewBankPermissionResource,
+		NewStrategyScopeResource,
+		NewApiKeyResource,
 	}
 }
 
 func (p *hindclawProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewResolvedPermissionsDataSource,
+	}
 }
