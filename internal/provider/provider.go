@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go/hindclaw"
+	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go"
 	hindsight "github.com/vectorize-io/hindsight/hindsight-clients/go"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"

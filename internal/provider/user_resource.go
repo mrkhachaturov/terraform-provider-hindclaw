@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go/hindclaw"
+	hindclaw "github.com/mrkhachaturov/hindclaw/hindclaw-clients/go"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

@@ -2,15 +2,12 @@ module github.com/mrkhachaturov/terraform-provider-hindclaw
 
 go 1.26.1
 
-replace (
-	github.com/mrkhachaturov/hindclaw/hindclaw-clients/go/hindclaw => ../hindclaw-clients/go
-	github.com/vectorize-io/hindsight/hindsight-clients/go => ../../hindsight/.upstream/hindsight-clients/go
-)
+replace github.com/vectorize-io/hindsight/hindsight-clients/go => ../../hindsight/.upstream/hindsight-clients/go
 
 require (
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
-	github.com/mrkhachaturov/hindclaw/hindclaw-clients/go/hindclaw v0.0.0-00010101000000-000000000000
+	github.com/mrkhachaturov/hindclaw/hindclaw-clients/go v0.1.0
 	github.com/vectorize-io/hindsight/hindsight-clients/go v0.0.0-00010101000000-000000000000
 )
 
