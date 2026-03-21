@@ -209,6 +209,8 @@ The release workflow publishes artifacts to GitHub Releases. Terraform Registry 
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
 
-## License
+## Licensing and Attribution
 
-Licensed under [MPL-2.0](LICENSE).
+This repository is licensed under [MPL-2.0](LICENSE).
+
+Upstream Hindsight and the surrounding Hindclaw workspace are MIT-licensed. For attribution and upstream license references, see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
