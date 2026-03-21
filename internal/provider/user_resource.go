@@ -182,8 +182,11 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	_, err := r.client.DefaultAPI.DeleteUser(ctx, state.ID.ValueString()).Execute()
+	httpResp, err := r.client.DefaultAPI.DeleteUser(ctx, state.ID.ValueString()).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting user", err.Error())
 		return
 	}

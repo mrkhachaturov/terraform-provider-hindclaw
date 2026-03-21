@@ -193,30 +193,26 @@ func (r *bankPermissionResource) buildRequest(ctx context.Context, plan *bankPer
 	} else {
 		req.SetRecallMaxTokensNil()
 	}
-	// List fields: empty slice to clear, not nil (nil = omit from JSON)
+	// List fields: only set when non-null. Nil omits from JSON, which means
+	// "no override" for this permission scope. This differs from group_resource
+	// Update where empty slice is needed to explicitly clear an existing value.
 	if !plan.RetainTags.IsNull() {
 		var tags []string
 		d := plan.RetainTags.ElementsAs(ctx, &tags, false)
 		diags.Append(d...)
 		req.SetRetainTags(tags)
-	} else {
-		req.SetRetainTags([]string{})
 	}
 	if !plan.RetainRoles.IsNull() {
 		var roles []string
 		d := plan.RetainRoles.ElementsAs(ctx, &roles, false)
 		diags.Append(d...)
 		req.SetRetainRoles(roles)
-	} else {
-		req.SetRetainRoles([]string{})
 	}
 	if !plan.ExcludeProviders.IsNull() {
 		var providers []string
 		d := plan.ExcludeProviders.ElementsAs(ctx, &providers, false)
 		diags.Append(d...)
 		req.SetExcludeProviders(providers)
-	} else {
-		req.SetExcludeProviders([]string{})
 	}
 	if !plan.RecallTagGroups.IsNull() {
 		var tagGroups []map[string]interface{}
@@ -225,8 +221,6 @@ func (r *bankPermissionResource) buildRequest(ctx context.Context, plan *bankPer
 			return nil
 		}
 		req.SetRecallTagGroups(tagGroups)
-	} else {
-		req.SetRecallTagGroups([]map[string]interface{}{})
 	}
 
 	return req
@@ -343,12 +337,15 @@ func (r *bankPermissionResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	_, err := r.client.DefaultAPI.DeleteBankPermission(ctx,
+	httpResp, err := r.client.DefaultAPI.DeleteBankPermission(ctx,
 		state.BankID.ValueString(),
 		state.ScopeType.ValueString(),
 		state.ScopeID.ValueString(),
 	).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting bank permission", err.Error())
 		return
 	}

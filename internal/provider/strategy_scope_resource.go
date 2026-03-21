@@ -187,12 +187,15 @@ func (r *strategyScopeResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	_, err := r.client.DefaultAPI.DeleteStrategy(ctx,
+	httpResp, err := r.client.DefaultAPI.DeleteStrategy(ctx,
 		state.BankID.ValueString(),
 		state.ScopeType.ValueString(),
 		state.ScopeValue.ValueString(),
 	).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting strategy scope", err.Error())
 		return
 	}

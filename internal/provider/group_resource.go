@@ -373,8 +373,11 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	_, err := r.client.DefaultAPI.DeleteGroup(ctx, state.ID.ValueString()).Execute()
+	httpResp, err := r.client.DefaultAPI.DeleteGroup(ctx, state.ID.ValueString()).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting group", err.Error())
 		return
 	}

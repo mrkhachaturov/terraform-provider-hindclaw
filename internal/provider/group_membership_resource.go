@@ -148,11 +148,14 @@ func (r *groupMembershipResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	_, err := r.client.DefaultAPI.RemoveGroupMember(ctx,
+	httpResp, err := r.client.DefaultAPI.RemoveGroupMember(ctx,
 		state.GroupID.ValueString(),
 		state.UserID.ValueString(),
 	).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error removing group member", err.Error())
 		return
 	}

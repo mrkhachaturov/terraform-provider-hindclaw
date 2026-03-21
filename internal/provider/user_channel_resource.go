@@ -158,12 +158,15 @@ func (r *userChannelResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	_, err := r.client.DefaultAPI.RemoveUserChannel(ctx,
+	httpResp, err := r.client.DefaultAPI.RemoveUserChannel(ctx,
 		state.UserID.ValueString(),
 		state.ChannelProvider.ValueString(),
 		state.SenderID.ValueString(),
 	).Execute()
 	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
 		resp.Diagnostics.AddError("Error deleting user channel", err.Error())
 		return
 	}
