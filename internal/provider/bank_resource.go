@@ -181,11 +181,20 @@ func (r *bankResource) buildRequest(plan *bankResourceModel) *hindsight.CreateBa
 
 // readProfileIntoState maps BankProfileResponse fields into the model.
 // Write-only fields (reflect_mission, retain_mission, etc.) are preserved from plan/state.
+//
+// Hindsight may derive profile mission/background from other config-layer values
+// such as reflect_mission. When Terraform explicitly manages mission/background,
+// preserve those configured values instead of round-tripping the derived/effective
+// API response back into state, which would otherwise cause perpetual drift.
 func (r *bankResource) readProfileIntoState(profile *hindsight.BankProfileResponse, state *bankResourceModel) {
 	state.BankID = types.StringValue(profile.BankId)
 	state.Name = types.StringValue(profile.Name)
-	state.Mission = types.StringValue(profile.Mission)
-	state.Background = nullableStringToTF(profile.Background)
+	if state.Mission.IsNull() || state.Mission.IsUnknown() {
+		state.Mission = types.StringValue(profile.Mission)
+	}
+	if state.Background.IsNull() || state.Background.IsUnknown() {
+		state.Background = nullableStringToTF(profile.Background)
+	}
 	state.DispositionSkepticism = types.Int64Value(int64(profile.Disposition.Skepticism))
 	state.DispositionLiteralism = types.Int64Value(int64(profile.Disposition.Literalism))
 	state.DispositionEmpathy = types.Int64Value(int64(profile.Disposition.Empathy))
