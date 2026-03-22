@@ -245,7 +245,7 @@ func (r *mentalModelResource) readResponseIntoState(ctx context.Context, model *
 	state.SourceQuery = types.StringValue(model.SourceQuery)
 
 	if model.Tags != nil {
-		listVal, d := types.ListValueFrom(ctx, types.StringType, model.Tags)
+		listVal, d := stringSliceToTFListPreserveNullOnEmpty(ctx, state.Tags, model.Tags)
 		diags.Append(d...)
 		state.Tags = listVal
 	} else {

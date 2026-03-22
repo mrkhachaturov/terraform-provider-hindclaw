@@ -1,6 +1,11 @@
 package provider
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 type nullableValue[T any] interface {
 	IsSet() bool
@@ -33,4 +38,11 @@ func requiredNullableString[N nullableValue[string]](n N) (string, bool) {
 		return "", false
 	}
 	return *n.Get(), true
+}
+
+func stringSliceToTFListPreserveNullOnEmpty(ctx context.Context, prior types.List, values []string) (types.List, diag.Diagnostics) {
+	if values == nil || (len(values) == 0 && prior.IsNull()) {
+		return types.ListNull(types.StringType), nil
+	}
+	return types.ListValueFrom(ctx, types.StringType, values)
 }

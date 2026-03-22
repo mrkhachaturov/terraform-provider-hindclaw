@@ -253,7 +253,7 @@ func (r *directiveResource) readResponseIntoState(ctx context.Context, directive
 		state.IsActive = types.BoolNull()
 	}
 	if directive.Tags != nil {
-		listVal, d := types.ListValueFrom(ctx, types.StringType, directive.Tags)
+		listVal, d := stringSliceToTFListPreserveNullOnEmpty(ctx, state.Tags, directive.Tags)
 		diags.Append(d...)
 		state.Tags = listVal
 	} else {
