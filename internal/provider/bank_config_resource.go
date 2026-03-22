@@ -94,7 +94,7 @@ func (r *bankConfigResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	if notFound := r.readOverridesIntoState(ctx, plan.BankID.ValueString(), &plan, &resp.Diagnostics); notFound {
+	if notFound := r.readManagedOverridesIntoState(ctx, plan.BankID.ValueString(), plan.Config.ValueString(), &plan, &resp.Diagnostics); notFound {
 		resp.Diagnostics.AddError("Error reading bank config after create", "Bank not found")
 		return
 	}
@@ -116,7 +116,7 @@ func (r *bankConfigResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	if notFound := r.readOverridesIntoState(ctx, state.BankID.ValueString(), &state, &resp.Diagnostics); notFound {
+	if notFound := r.readManagedOverridesIntoState(ctx, state.BankID.ValueString(), state.Config.ValueString(), &state, &resp.Diagnostics); notFound {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -129,33 +129,63 @@ func (r *bankConfigResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *bankConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state bankConfigResourceModel
 	var plan bankConfigResourceModel
-	diags := req.Plan.Get(ctx, &plan)
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	diags = req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// UpdateBankConfig is PATCH (merge), so removing a key from Terraform config
-	// won't clear it on the server. Reset first, then re-apply desired overrides.
-	_, _, err := r.client.BanksAPI.ResetBankConfig(ctx, plan.BankID.ValueString()).Execute()
+	desiredOverrides, err := r.parseConfigJSON(plan.Config.ValueString(), &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	currentConfig, httpResp, err := r.client.BanksAPI.GetBankConfig(ctx, plan.BankID.ValueString()).Execute()
+	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			resp.Diagnostics.AddError("Error reading bank config before update", "Bank not found")
+			return
+		}
+		resp.Diagnostics.AddError("Error reading bank config before update", err.Error())
+		return
+	}
+
+	managedKeys, err := parseConfigKeys(state.Config.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid prior state config JSON", err.Error())
+		return
+	}
+
+	// UpdateBankConfig is PATCH (merge). To remove managed keys safely without
+	// clobbering overrides owned by other resources, reset the bank config and
+	// then re-apply:
+	// 1. all current overrides not owned by this resource
+	// 2. the desired overrides from Terraform config
+	mergedOverrides := filterOverridesExcludingKeys(currentConfig.Overrides, managedKeys)
+	for k, v := range desiredOverrides {
+		mergedOverrides[k] = v
+	}
+
+	_, _, err = r.client.BanksAPI.ResetBankConfig(ctx, plan.BankID.ValueString()).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("Error resetting bank config before update", err.Error())
 		return
 	}
 
-	configReq, err := r.buildConfigUpdate(ctx, &plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
+	if len(mergedOverrides) > 0 {
+		configReq := hindsight.NewBankConfigUpdate(mergedOverrides)
+		_, _, err = r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating bank config", err.Error())
+			return
+		}
 	}
 
-	_, _, err = r.client.BanksAPI.UpdateBankConfig(ctx, plan.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating bank config", err.Error())
-		return
-	}
-
-	if notFound := r.readOverridesIntoState(ctx, plan.BankID.ValueString(), &plan, &resp.Diagnostics); notFound {
+	if notFound := r.readManagedOverridesIntoState(ctx, plan.BankID.ValueString(), plan.Config.ValueString(), &plan, &resp.Diagnostics); notFound {
 		resp.Diagnostics.AddError("Error reading bank config after update", "Bank not found")
 		return
 	}
@@ -175,13 +205,42 @@ func (r *bankConfigResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	_, httpResp, err := r.client.BanksAPI.ResetBankConfig(ctx, state.BankID.ValueString()).Execute()
+	currentConfig, httpResp, err := r.client.BanksAPI.GetBankConfig(ctx, state.BankID.ValueString()).Execute()
+	if err != nil {
+		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+			return
+		}
+		resp.Diagnostics.AddError("Error reading bank config before delete", err.Error())
+		return
+	}
+
+	managedKeys, err := parseConfigKeys(state.Config.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid prior state config JSON", err.Error())
+		return
+	}
+
+	preservedOverrides := filterOverridesExcludingKeys(currentConfig.Overrides, managedKeys)
+
+	_, httpResp, err = r.client.BanksAPI.ResetBankConfig(ctx, state.BankID.ValueString()).Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			return
 		}
 		resp.Diagnostics.AddError("Error resetting bank config", err.Error())
 		return
+	}
+
+	if len(preservedOverrides) > 0 {
+		configReq := hindsight.NewBankConfigUpdate(preservedOverrides)
+		_, httpResp, err = r.client.BanksAPI.UpdateBankConfig(ctx, state.BankID.ValueString()).BankConfigUpdate(*configReq).Execute()
+		if err != nil {
+			if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+				return
+			}
+			resp.Diagnostics.AddError("Error restoring unmanaged bank config overrides", err.Error())
+			return
+		}
 	}
 }
 
@@ -190,17 +249,50 @@ func (r *bankConfigResource) ImportState(ctx context.Context, req resource.Impor
 }
 
 func (r *bankConfigResource) buildConfigUpdate(ctx context.Context, plan *bankConfigResourceModel, diags *diag.Diagnostics) (*hindsight.BankConfigUpdate, error) {
-	var updates map[string]interface{}
-	if err := json.Unmarshal([]byte(plan.Config.ValueString()), &updates); err != nil {
-		diags.AddError("Invalid config JSON", err.Error())
+	updates, err := r.parseConfigJSON(plan.Config.ValueString(), diags)
+	if err != nil {
 		return nil, err
 	}
 	return hindsight.NewBankConfigUpdate(updates), nil
 }
 
-// readOverridesIntoState reads the Overrides map (not resolved Config) from the API.
-// Returns true if 404 (bank deleted).
-func (r *bankConfigResource) readOverridesIntoState(ctx context.Context, bankID string, state *bankConfigResourceModel, diags *diag.Diagnostics) (notFound bool) {
+func (r *bankConfigResource) parseConfigJSON(configJSON string, diags *diag.Diagnostics) (map[string]interface{}, error) {
+	var updates map[string]interface{}
+	if err := json.Unmarshal([]byte(configJSON), &updates); err != nil {
+		diags.AddError("Invalid config JSON", err.Error())
+		return nil, err
+	}
+	return updates, nil
+}
+
+func parseConfigKeys(configJSON string) (map[string]struct{}, error) {
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(configJSON), &config); err != nil {
+		return nil, err
+	}
+	keys := make(map[string]struct{}, len(config))
+	for key := range config {
+		keys[key] = struct{}{}
+	}
+	return keys, nil
+}
+
+func filterOverridesExcludingKeys(overrides map[string]interface{}, excludedKeys map[string]struct{}) map[string]interface{} {
+	filtered := make(map[string]interface{}, len(overrides))
+	for key, value := range overrides {
+		if _, excluded := excludedKeys[key]; excluded {
+			continue
+		}
+		filtered[key] = value
+	}
+	return filtered
+}
+
+// readManagedOverridesIntoState reads the bank-specific Overrides map from the API,
+// then filters it down to only the keys managed by this Terraform resource.
+// This avoids state drift when the API also returns inherited or foreign overrides
+// in the same namespace. Returns true if 404 (bank deleted).
+func (r *bankConfigResource) readManagedOverridesIntoState(ctx context.Context, bankID string, managedConfigJSON string, state *bankConfigResourceModel, diags *diag.Diagnostics) (notFound bool) {
 	bankConfig, httpResp, err := r.client.BanksAPI.GetBankConfig(ctx, bankID).Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
@@ -210,10 +302,22 @@ func (r *bankConfigResource) readOverridesIntoState(ctx context.Context, bankID 
 		return false
 	}
 
-	// Store only Overrides as JSON, not the resolved Config (which includes inherited defaults).
-	jsonBytes, err := json.Marshal(bankConfig.Overrides)
+	managedKeys, err := parseConfigKeys(managedConfigJSON)
 	if err != nil {
-		diags.AddError("Error marshaling overrides", err.Error())
+		diags.AddError("Invalid managed config JSON in state", err.Error())
+		return false
+	}
+
+	managedOverrides := make(map[string]interface{}, len(managedKeys))
+	for key := range managedKeys {
+		if value, ok := bankConfig.Overrides[key]; ok {
+			managedOverrides[key] = value
+		}
+	}
+
+	jsonBytes, err := json.Marshal(managedOverrides)
+	if err != nil {
+		diags.AddError("Error marshaling managed overrides", err.Error())
 		return false
 	}
 	state.Config = types.StringValue(string(jsonBytes))
