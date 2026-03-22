@@ -126,8 +126,8 @@ func (r *mentalModelResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	modelId := ""
-	if createResp.MentalModelId.IsSet() {
-		modelId = *createResp.MentalModelId.Get()
+	if id, ok := requiredNullableString(createResp.MentalModelId); ok {
+		modelId = id
 	}
 	if modelId == "" {
 		resp.Diagnostics.AddError("Error creating mental model", "Server returned empty mental_model_id")

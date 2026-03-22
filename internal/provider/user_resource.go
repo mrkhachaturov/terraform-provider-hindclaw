@@ -99,9 +99,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(user.Id)
 	plan.DisplayName = types.StringValue(user.DisplayName)
-	if user.Email.IsSet() {
-		plan.Email = types.StringValue(*user.Email.Get())
-	}
+	plan.Email = nullableStringToTF(user.Email)
 
 	tflog.Trace(ctx, "created user", map[string]any{"id": user.Id})
 
@@ -129,11 +127,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	state.ID = types.StringValue(user.Id)
 	state.DisplayName = types.StringValue(user.DisplayName)
-	if user.Email.IsSet() {
-		state.Email = types.StringValue(*user.Email.Get())
-	} else {
-		state.Email = types.StringNull()
-	}
+	state.Email = nullableStringToTF(user.Email)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -166,9 +160,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	plan.ID = types.StringValue(user.Id)
 	plan.DisplayName = types.StringValue(user.DisplayName)
-	if user.Email.IsSet() {
-		plan.Email = types.StringValue(*user.Email.Get())
-	}
+	plan.Email = nullableStringToTF(user.Email)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

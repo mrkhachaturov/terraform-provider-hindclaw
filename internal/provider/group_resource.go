@@ -402,46 +402,14 @@ func (r *groupResource) readGroupIntoState(ctx context.Context, groupID string, 
 	state.ID = types.StringValue(group.Id)
 	state.DisplayName = types.StringValue(group.DisplayName)
 
-	if group.Recall.IsSet() {
-		state.Recall = types.BoolValue(*group.Recall.Get())
-	} else {
-		state.Recall = types.BoolNull()
-	}
-	if group.Retain.IsSet() {
-		state.Retain = types.BoolValue(*group.Retain.Get())
-	} else {
-		state.Retain = types.BoolNull()
-	}
-	if group.RecallBudget.IsSet() {
-		state.RecallBudget = types.StringValue(*group.RecallBudget.Get())
-	} else {
-		state.RecallBudget = types.StringNull()
-	}
-	if group.RetainStrategy.IsSet() {
-		state.RetainStrategy = types.StringValue(*group.RetainStrategy.Get())
-	} else {
-		state.RetainStrategy = types.StringNull()
-	}
-	if group.LlmModel.IsSet() {
-		state.LlmModel = types.StringValue(*group.LlmModel.Get())
-	} else {
-		state.LlmModel = types.StringNull()
-	}
-	if group.LlmProvider.IsSet() {
-		state.LlmProvider = types.StringValue(*group.LlmProvider.Get())
-	} else {
-		state.LlmProvider = types.StringNull()
-	}
-	if group.RetainEveryNTurns.IsSet() {
-		state.RetainEveryNTurns = types.Int64Value(int64(*group.RetainEveryNTurns.Get()))
-	} else {
-		state.RetainEveryNTurns = types.Int64Null()
-	}
-	if group.RecallMaxTokens.IsSet() {
-		state.RecallMaxTokens = types.Int64Value(int64(*group.RecallMaxTokens.Get()))
-	} else {
-		state.RecallMaxTokens = types.Int64Null()
-	}
+	state.Recall = nullableBoolToTF(group.Recall)
+	state.Retain = nullableBoolToTF(group.Retain)
+	state.RecallBudget = nullableStringToTF(group.RecallBudget)
+	state.RetainStrategy = nullableStringToTF(group.RetainStrategy)
+	state.LlmModel = nullableStringToTF(group.LlmModel)
+	state.LlmProvider = nullableStringToTF(group.LlmProvider)
+	state.RetainEveryNTurns = nullableInt32ToTF(group.RetainEveryNTurns)
+	state.RecallMaxTokens = nullableInt32ToTF(group.RecallMaxTokens)
 
 	// List fields: convert Go slices to Terraform types.List.
 	// Use group.RetainTags != nil (not len > 0) to distinguish "server returned

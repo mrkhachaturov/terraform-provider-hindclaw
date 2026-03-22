@@ -132,21 +132,9 @@ func (d *resolvedPermissionsDataSource) Read(ctx context.Context, req datasource
 	config.RecallBudget = types.StringValue(resolved.RecallBudget)
 	config.RecallMaxTokens = types.Int64Value(int64(resolved.RecallMaxTokens))
 
-	if resolved.RetainStrategy.IsSet() {
-		config.RetainStrategy = types.StringValue(*resolved.RetainStrategy.Get())
-	} else {
-		config.RetainStrategy = types.StringNull()
-	}
-	if resolved.LlmModel.IsSet() {
-		config.LlmModel = types.StringValue(*resolved.LlmModel.Get())
-	} else {
-		config.LlmModel = types.StringNull()
-	}
-	if resolved.LlmProvider.IsSet() {
-		config.LlmProvider = types.StringValue(*resolved.LlmProvider.Get())
-	} else {
-		config.LlmProvider = types.StringNull()
-	}
+	config.RetainStrategy = nullableStringToTF(resolved.RetainStrategy)
+	config.LlmModel = nullableStringToTF(resolved.LlmModel)
+	config.LlmProvider = nullableStringToTF(resolved.LlmProvider)
 
 	retainRoles, diags2 := types.ListValueFrom(ctx, types.StringType, resolved.RetainRoles)
 	resp.Diagnostics.Append(diags2...)

@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-03-22
+
+### Fixed
+
+- Prevent nil pointer dereferences when API responses include explicit JSON `null` for generated `Nullable*` fields.
+- Centralize nullable response handling in the Terraform provider so unset and explicit `null` values both map safely to Terraform `null`.
+- Add regression tests for nullable field conversion helpers.
+
 ## [0.1.0] - 2026-03-22
 
 ### Added

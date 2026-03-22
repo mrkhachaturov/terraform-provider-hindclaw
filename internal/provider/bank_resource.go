@@ -185,11 +185,7 @@ func (r *bankResource) readProfileIntoState(profile *hindsight.BankProfileRespon
 	state.BankID = types.StringValue(profile.BankId)
 	state.Name = types.StringValue(profile.Name)
 	state.Mission = types.StringValue(profile.Mission)
-	if profile.Background.IsSet() {
-		state.Background = types.StringValue(*profile.Background.Get())
-	} else {
-		state.Background = types.StringNull()
-	}
+	state.Background = nullableStringToTF(profile.Background)
 	state.DispositionSkepticism = types.Int64Value(int64(profile.Disposition.Skepticism))
 	state.DispositionLiteralism = types.Int64Value(int64(profile.Disposition.Literalism))
 	state.DispositionEmpathy = types.Int64Value(int64(profile.Disposition.Empathy))

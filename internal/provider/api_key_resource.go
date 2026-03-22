@@ -112,9 +112,7 @@ func (r *apiKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	plan.ID = types.StringValue(key.Id)
 	plan.ApiKey = types.StringValue(key.ApiKey)
-	if key.Description.IsSet() {
-		plan.Description = types.StringValue(*key.Description.Get())
-	}
+	plan.Description = nullableStringToTF(key.Description)
 
 	tflog.Trace(ctx, "created API key", map[string]any{"id": key.Id})
 
@@ -143,11 +141,7 @@ func (r *apiKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	found := false
 	for _, k := range keys {
 		if k.Id == state.ID.ValueString() {
-			if k.Description.IsSet() {
-				state.Description = types.StringValue(*k.Description.Get())
-			} else {
-				state.Description = types.StringNull()
-			}
+			state.Description = nullableStringToTF(k.Description)
 			found = true
 			break
 		}

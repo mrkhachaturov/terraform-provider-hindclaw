@@ -380,46 +380,14 @@ func (r *bankPermissionResource) readPermissionIntoState(ctx context.Context, st
 	state.ScopeType = types.StringValue(perm.ScopeType)
 	state.ScopeID = types.StringValue(perm.ScopeId)
 
-	if perm.Recall.IsSet() {
-		state.Recall = types.BoolValue(*perm.Recall.Get())
-	} else {
-		state.Recall = types.BoolNull()
-	}
-	if perm.Retain.IsSet() {
-		state.Retain = types.BoolValue(*perm.Retain.Get())
-	} else {
-		state.Retain = types.BoolNull()
-	}
-	if perm.RecallBudget.IsSet() {
-		state.RecallBudget = types.StringValue(*perm.RecallBudget.Get())
-	} else {
-		state.RecallBudget = types.StringNull()
-	}
-	if perm.RetainStrategy.IsSet() {
-		state.RetainStrategy = types.StringValue(*perm.RetainStrategy.Get())
-	} else {
-		state.RetainStrategy = types.StringNull()
-	}
-	if perm.LlmModel.IsSet() {
-		state.LlmModel = types.StringValue(*perm.LlmModel.Get())
-	} else {
-		state.LlmModel = types.StringNull()
-	}
-	if perm.LlmProvider.IsSet() {
-		state.LlmProvider = types.StringValue(*perm.LlmProvider.Get())
-	} else {
-		state.LlmProvider = types.StringNull()
-	}
-	if perm.RetainEveryNTurns.IsSet() {
-		state.RetainEveryNTurns = types.Int64Value(int64(*perm.RetainEveryNTurns.Get()))
-	} else {
-		state.RetainEveryNTurns = types.Int64Null()
-	}
-	if perm.RecallMaxTokens.IsSet() {
-		state.RecallMaxTokens = types.Int64Value(int64(*perm.RecallMaxTokens.Get()))
-	} else {
-		state.RecallMaxTokens = types.Int64Null()
-	}
+	state.Recall = nullableBoolToTF(perm.Recall)
+	state.Retain = nullableBoolToTF(perm.Retain)
+	state.RecallBudget = nullableStringToTF(perm.RecallBudget)
+	state.RetainStrategy = nullableStringToTF(perm.RetainStrategy)
+	state.LlmModel = nullableStringToTF(perm.LlmModel)
+	state.LlmProvider = nullableStringToTF(perm.LlmProvider)
+	state.RetainEveryNTurns = nullableInt32ToTF(perm.RetainEveryNTurns)
+	state.RecallMaxTokens = nullableInt32ToTF(perm.RecallMaxTokens)
 
 	if perm.RetainTags != nil {
 		listVal, d := types.ListValueFrom(ctx, types.StringType, perm.RetainTags)

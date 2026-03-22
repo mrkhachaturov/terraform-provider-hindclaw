@@ -84,11 +84,7 @@ func (d *bankProfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	config.Name = types.StringValue(profile.Name)
 	config.Mission = types.StringValue(profile.Mission)
-	if profile.Background.IsSet() {
-		config.Background = types.StringValue(*profile.Background.Get())
-	} else {
-		config.Background = types.StringNull()
-	}
+	config.Background = nullableStringToTF(profile.Background)
 	config.DispositionSkepticism = types.Int64Value(int64(profile.Disposition.Skepticism))
 	config.DispositionLiteralism = types.Int64Value(int64(profile.Disposition.Literalism))
 	config.DispositionEmpathy = types.Int64Value(int64(profile.Disposition.Empathy))

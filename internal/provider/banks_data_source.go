@@ -84,11 +84,7 @@ func (d *banksDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		item := bankItemModel{
 			BankID: types.StringValue(b.BankId),
 		}
-		if b.Name.IsSet() {
-			item.Name = types.StringValue(*b.Name.Get())
-		} else {
-			item.Name = types.StringNull()
-		}
+		item.Name = nullableStringToTF(b.Name)
 		state.Banks = append(state.Banks, item)
 	}
 
