@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.15.0
-	github.com/mrkhachaturov/hindclaw/hindclaw-clients/go v0.1.0
+	github.com/mrkhachaturov/hindclaw/hindclaw-clients/go v0.1.2
 	github.com/vectorize-io/hindsight/hindsight-clients/go v0.4.20
 )
 
