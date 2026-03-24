@@ -26,13 +26,18 @@ resource "hindclaw_user" "test" {
 					resource.TestCheckResourceAttr("hindclaw_user.test", "id", rName),
 					resource.TestCheckResourceAttr("hindclaw_user.test", "display_name", "TF Test User"),
 					resource.TestCheckResourceAttr("hindclaw_user.test", "email", "test@example.com"),
+					resource.TestCheckResourceAttr("hindclaw_user.test", "disable_user", "false"),
+					resource.TestCheckResourceAttr("hindclaw_user.test", "force_destroy", "false"),
 				),
 			},
+			// Import
 			{
-				ResourceName:      "hindclaw_user.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "hindclaw_user.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
+			// Update display_name
 			{
 				Config: fmt.Sprintf(`
 resource "hindclaw_user" "test" {
@@ -42,6 +47,32 @@ resource "hindclaw_user" "test" {
 }`, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("hindclaw_user.test", "display_name", "TF Test User Updated"),
+				),
+			},
+			// Disable user
+			{
+				Config: fmt.Sprintf(`
+resource "hindclaw_user" "test" {
+  id           = %q
+  display_name = "TF Test User Updated"
+  email        = "test@example.com"
+  disable_user = true
+}`, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("hindclaw_user.test", "disable_user", "true"),
+				),
+			},
+			// Re-enable user
+			{
+				Config: fmt.Sprintf(`
+resource "hindclaw_user" "test" {
+  id           = %q
+  display_name = "TF Test User Updated"
+  email        = "test@example.com"
+  disable_user = false
+}`, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("hindclaw_user.test", "disable_user", "false"),
 				),
 			},
 		},

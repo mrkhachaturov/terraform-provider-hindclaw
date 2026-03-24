@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,8 +28,9 @@ func NewGroupResource() resource.Resource {
 }
 
 type groupResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	DisplayName types.String `tfsdk:"display_name"`
+	ID           types.String `tfsdk:"id"`
+	DisplayName  types.String `tfsdk:"display_name"`
+	ForceDestroy types.Bool   `tfsdk:"force_destroy"`
 }
 
 type groupResource struct {
@@ -53,6 +55,12 @@ func (r *groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"display_name": schema.StringAttribute{
 				Description: "Display name.",
 				Required:    true,
+			},
+			"force_destroy": schema.BoolAttribute{
+				Description: "When true, deleting the group also detaches all policy attachments and removes all group memberships. When false (default), delete fails if the group has attachments or members.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 		},
 	}
@@ -155,7 +163,51 @@ func (r *groupResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	httpResp, err := r.client.DefaultAPI.DeleteGroup(ctx, state.ID.ValueString()).Execute()
+	groupID := state.ID.ValueString()
+
+	// Clean up policy attachments for this group. The policy_attachments table
+	// uses a TEXT principal_id with no FK constraint, so orphaned rows would
+	// remain if we deleted the group without removing them first.
+	// ListPolicyAttachments is per-policy, so list all policies and filter.
+	policies, _, err := r.client.DefaultAPI.ListPolicies(ctx).Execute()
+	if err != nil {
+		resp.Diagnostics.AddError("Error listing policies for group cleanup", err.Error())
+		return
+	}
+	for _, p := range policies {
+		attachments, _, err := r.client.DefaultAPI.ListPolicyAttachments(ctx).PolicyId(p.Id).Execute()
+		if err != nil {
+			resp.Diagnostics.AddError("Error listing policy attachments for group", err.Error())
+			return
+		}
+		for _, a := range attachments {
+			if a.PrincipalType == "group" && a.PrincipalId == groupID {
+				_, err := r.client.DefaultAPI.DeletePolicyAttachment(ctx, a.PolicyId, "group", groupID).Execute()
+				if err != nil {
+					resp.Diagnostics.AddError("Error deleting policy attachment", err.Error())
+					return
+				}
+			}
+		}
+	}
+
+	// If force_destroy, also remove all group memberships.
+	if state.ForceDestroy.ValueBool() {
+		members, _, err := r.client.DefaultAPI.ListGroupMembers(ctx, groupID).Execute()
+		if err != nil {
+			resp.Diagnostics.AddError("Error listing group members", err.Error())
+			return
+		}
+		for _, m := range members {
+			_, err := r.client.DefaultAPI.RemoveGroupMember(ctx, groupID, m.UserId).Execute()
+			if err != nil {
+				resp.Diagnostics.AddError("Error removing group member", err.Error())
+				return
+			}
+		}
+	}
+
+	httpResp, err := r.client.DefaultAPI.DeleteGroup(ctx, groupID).Execute()
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
 			return

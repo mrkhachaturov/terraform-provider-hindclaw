@@ -29,6 +29,8 @@ resource "hindclaw_user" "alice" {
 
 ### Optional
 
+- `disable_user` (Boolean) When true, user is disabled (maps to is_active=false on the API).
 - `email` (String) Email address.
+- `force_destroy` (Boolean) When true, deleting the user cascades to service accounts, API keys, policy attachments, group memberships, and channel mappings.
 
 

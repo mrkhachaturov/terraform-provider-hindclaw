@@ -12,13 +12,9 @@ Manages a Hindclaw group (identity-only container for policy attachment).
 ## Example Usage
 
 ```terraform
-resource "hindclaw_group" "agents" {
-  id            = "agents"
-  display_name  = "AI Agents"
-  recall        = true
-  retain        = true
-  retain_tags   = ["agent", "internal"]
-  recall_budget = "mid"
+resource "hindclaw_group" "default" {
+  id           = "default"
+  display_name = "Default group"
 }
 ```
 
@@ -29,5 +25,9 @@ resource "hindclaw_group" "agents" {
 
 - `display_name` (String) Display name.
 - `id` (String) Group identifier. Immutable after creation.
+
+### Optional
+
+- `force_destroy` (Boolean) When true, deleting the group also detaches all policy attachments and removes all group memberships. When false (default), delete fails if the group has attachments or members.
 
 
