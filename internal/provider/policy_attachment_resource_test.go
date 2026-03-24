@@ -49,10 +49,11 @@ resource "hindclaw_policy_attachment" "test" {
 			},
 			// Import
 			{
-				ResourceName:      "hindclaw_policy_attachment.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     fmt.Sprintf("%s/group/%s", rPolicy, rGroup),
+				ResourceName:                         "hindclaw_policy_attachment.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_id",
+				ImportStateId:                        fmt.Sprintf("%s/group/%s", rPolicy, rGroup),
 			},
 			// Update priority
 			{

@@ -1,63 +1,54 @@
 package provider
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccBankPolicyResource(t *testing.T) {
-	rBank := acctest.RandomWithPrefix("tf-test")
-
+	// Use an existing bank (yoda) — hindclaw_bank creation uses the Hindsight
+	// native API which has a client/API version mismatch for the "input" field.
+	// Bank policy CRUD is what we're testing here, not bank creation.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(`
-resource "hindclaw_bank" "test" {
-  bank_id = %q
-  name    = "Test Bank"
-}
-
+				Config: `
 resource "hindclaw_bank_policy" "test" {
-  bank_id = hindclaw_bank.test.bank_id
+  bank_id = "yoda"
   document = jsonencode({
     version          = "2026-03-24"
-    default_strategy = "test-default"
+    default_strategy = "yoda-acc-test"
   })
-}`, rBank),
+}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("hindclaw_bank_policy.test", "bank_id", rBank),
+					resource.TestCheckResourceAttr("hindclaw_bank_policy.test", "bank_id", "yoda"),
 					resource.TestCheckResourceAttrSet("hindclaw_bank_policy.test", "document"),
 				),
 			},
 			// Import
 			{
-				ResourceName:      "hindclaw_bank_policy.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         "hindclaw_bank_policy.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "bank_id",
+				ImportStateId:                        "yoda",
 			},
 			// Update document
 			{
-				Config: fmt.Sprintf(`
-resource "hindclaw_bank" "test" {
-  bank_id = %q
-  name    = "Test Bank"
-}
-
+				Config: `
 resource "hindclaw_bank_policy" "test" {
-  bank_id = hindclaw_bank.test.bank_id
+  bank_id = "yoda"
   document = jsonencode({
     version          = "2026-03-24"
-    default_strategy = "test-updated"
+    default_strategy = "yoda-acc-test-updated"
     strategy_overrides = [
-      { scope = "channel", value = "telegram", strategy = "test-telegram" }
+      { scope = "channel", value = "telegram", strategy = "yoda-telegram" }
     ]
   })
-}`, rBank),
+}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hindclaw_bank_policy.test", "document"),
 				),
