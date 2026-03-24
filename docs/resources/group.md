@@ -2,12 +2,12 @@
 page_title: "hindclaw_group Resource - hindclaw"
 subcategory: ""
 description: |-
-  Manages a Hindclaw group with permission defaults.
+  Manages a Hindclaw group (identity-only container for policy attachment).
 ---
 
 # hindclaw_group (Resource)
 
-Manages a Hindclaw group with permission defaults.
+Manages a Hindclaw group (identity-only container for policy attachment).
 
 ## Example Usage
 
@@ -29,20 +29,5 @@ resource "hindclaw_group" "agents" {
 
 - `display_name` (String) Display name.
 - `id` (String) Group identifier. Immutable after creation.
-
-### Optional
-
-- `exclude_providers` (List of String) Excluded memory providers.
-- `llm_model` (String) LLM model override.
-- `llm_provider` (String) LLM provider override.
-- `recall` (Boolean) Global recall default.
-- `recall_budget` (String) Budget level (low/mid/high).
-- `recall_max_tokens` (Number) Max recall tokens.
-- `recall_tag_groups` (String) Tag group filter (JSON-encoded).
-- `retain` (Boolean) Global retain default.
-- `retain_every_n_turns` (Number) Retain frequency.
-- `retain_roles` (List of String) Roles to retain.
-- `retain_strategy` (String) Default retain strategy.
-- `retain_tags` (List of String) Tags to inject on retain.
 
 

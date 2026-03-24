@@ -1,5 +1,5 @@
 resource "hindclaw_bank_policy" "alpha" {
-  bank_id  = "agent-alpha"
+  bank_id = "agent-alpha"
   document = jsonencode({
     version = "1"
     statements = [

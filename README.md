@@ -42,13 +42,14 @@ The binary serves `registry.terraform.io/mrkhachaturov/hindclaw`, which matches 
 
 | Area | Resources |
 | --- | --- |
-| Identity and access | `hindclaw_user`, `hindclaw_user_channel`, `hindclaw_group`, `hindclaw_group_membership`, `hindclaw_bank_permission`, `hindclaw_strategy_scope`, `hindclaw_api_key` |
+| Identity | `hindclaw_user`, `hindclaw_user_channel`, `hindclaw_group`, `hindclaw_group_membership`, `hindclaw_api_key` |
+| Access control | `hindclaw_policy`, `hindclaw_policy_attachment`, `hindclaw_service_account`, `hindclaw_service_account_key`, `hindclaw_bank_policy` |
 | Memory banks | `hindclaw_bank`, `hindclaw_bank_config` |
 | Hindsight intelligence | `hindclaw_mental_model`, `hindclaw_directive`, `hindclaw_webhook` |
 
 | Data source | Purpose |
 | --- | --- |
-| `hindclaw_resolved_permissions` | Resolve effective permissions for a user/context |
+| `hindclaw_policy_document` | Build access policy JSON from HCL statement blocks |
 | `hindclaw_bank_profile` | Read a bank profile |
 | `hindclaw_banks` | List available banks |
 
@@ -84,23 +85,26 @@ resource "hindclaw_user" "alice" {
 resource "hindclaw_group" "agents" {
   id           = "agents"
   display_name = "AI Agents"
-  recall       = true
-  retain       = true
-  retain_tags  = ["agent", "internal"]
 }
 
-resource "hindclaw_bank" "alpha" {
-  bank_id = "agent-alpha"
-  name    = "Agent Alpha"
-  mission = "Strategic mentor and advisor"
+data "hindclaw_policy_document" "agents_access" {
+  statement {
+    effect  = "allow"
+    actions = ["bank:recall", "bank:reflect", "bank:retain"]
+    banks   = ["*"]
+  }
 }
 
-resource "hindclaw_bank_permission" "agents_alpha" {
-  bank_id    = hindclaw_bank.alpha.bank_id
-  scope_type = "group"
-  scope_id   = hindclaw_group.agents.id
-  recall     = true
-  retain     = true
+resource "hindclaw_policy" "agents_access" {
+  id           = "agents-access"
+  display_name = "Agent fleet access"
+  document     = data.hindclaw_policy_document.agents_access.json
+}
+
+resource "hindclaw_policy_attachment" "agents_access" {
+  policy_id      = hindclaw_policy.agents_access.id
+  principal_type = "group"
+  principal_id   = hindclaw_group.agents.id
 }
 ```
 
