@@ -164,8 +164,6 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/mrkhachaturov/hindclaw/hindclaw-clients/go v0.1.0 h1:4S4cs/2fA3SyMmaw3rP9MaJsoedO5bOWZUdCXTLLm4Q=
-github.com/mrkhachaturov/hindclaw/hindclaw-clients/go v0.1.0/go.mod h1:OEyAw3yIeD1CmjfjoNg2uCJKjRNKDKVPt/4crkyive0=
 github.com/mrkhachaturov/hindsight/hindsight-clients/go v0.4.19 h1:nUoIZLriBsYjJuiAQGSh+r5i8As+roK51GFO5qZaaJA=
 github.com/mrkhachaturov/hindsight/hindsight-clients/go v0.4.19/go.mod h1:Ymui4sondEt530+YdZHhO9jvnIyLbyKqrP5ZFu7kxX0=
 github.com/oklog/run v1.1.0 h1:GEenZ1cK0+q0+wsJew9qUg/DyD8k3JzYsZAi5gYi2mA=

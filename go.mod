@@ -4,6 +4,8 @@ go 1.26.1
 
 replace github.com/vectorize-io/hindsight/hindsight-clients/go => github.com/mrkhachaturov/hindsight/hindsight-clients/go v0.4.19
 
+replace github.com/mrkhachaturov/hindclaw/hindclaw-clients/go => ../hindclaw-clients/go
+
 require (
 	github.com/hashicorp/terraform-plugin-docs v0.24.0
 	github.com/hashicorp/terraform-plugin-framework v1.19.0

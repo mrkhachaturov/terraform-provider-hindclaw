@@ -136,21 +136,25 @@ func (p *hindclawProvider) Resources(_ context.Context) []func() resource.Resour
 		NewGroupResource,
 		NewUserChannelResource,
 		NewGroupMembershipResource,
-		NewBankPermissionResource,
-		NewStrategyScopeResource,
 		NewApiKeyResource,
 		NewBankResource,
 		NewBankConfigResource,
 		NewMentalModelResource,
 		NewDirectiveResource,
 		NewWebhookResource,
+		// Policy model resources
+		NewPolicyResource,
+		NewPolicyAttachmentResource,
+		NewServiceAccountResource,
+		NewServiceAccountKeyResource,
+		NewBankPolicyResource,
 	}
 }
 
 func (p *hindclawProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewResolvedPermissionsDataSource,
 		NewBankProfileDataSource,
 		NewBanksDataSource,
+		NewPolicyDocumentDataSource,
 	}
 }

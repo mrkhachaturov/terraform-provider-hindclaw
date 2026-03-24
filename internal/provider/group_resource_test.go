@@ -20,14 +20,11 @@ func TestAccGroupResource(t *testing.T) {
 resource "hindclaw_group" "test" {
   id           = %q
   display_name = "TF Test Group"
-  recall       = true
-  retain       = false
 }`, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("hindclaw_group.test", "id", rName),
 					resource.TestCheckResourceAttr("hindclaw_group.test", "display_name", "TF Test Group"),
-					resource.TestCheckResourceAttr("hindclaw_group.test", "recall", "true"),
-					resource.TestCheckResourceAttr("hindclaw_group.test", "retain", "false"),
+					resource.TestCheckResourceAttr("hindclaw_group.test", "force_destroy", "false"),
 				),
 			},
 			{
@@ -40,11 +37,9 @@ resource "hindclaw_group" "test" {
 resource "hindclaw_group" "test" {
   id           = %q
   display_name = "TF Test Group Updated"
-  recall       = false
 }`, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("hindclaw_group.test", "display_name", "TF Test Group Updated"),
-					resource.TestCheckResourceAttr("hindclaw_group.test", "recall", "false"),
 				),
 			},
 		},
