@@ -24,7 +24,6 @@ resource "hindclaw_group" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("hindclaw_group.test", "id", rName),
 					resource.TestCheckResourceAttr("hindclaw_group.test", "display_name", "TF Test Group"),
-					resource.TestCheckResourceAttr("hindclaw_group.test", "force_destroy", "false"),
 				),
 			},
 			{

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,9 +27,8 @@ func NewGroupResource() resource.Resource {
 }
 
 type groupResourceModel struct {
-	ID           types.String `tfsdk:"id"`
-	DisplayName  types.String `tfsdk:"display_name"`
-	ForceDestroy types.Bool   `tfsdk:"force_destroy"`
+	ID          types.String `tfsdk:"id"`
+	DisplayName types.String `tfsdk:"display_name"`
 }
 
 type groupResource struct {
@@ -55,12 +53,6 @@ func (r *groupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"display_name": schema.StringAttribute{
 				Description: "Display name.",
 				Required:    true,
-			},
-			"force_destroy": schema.BoolAttribute{
-				Description: "When true, deleting the group also removes all memberships. When false (default), delete fails if memberships exist.",
-				Optional:    true,
-				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 		},
 	}
