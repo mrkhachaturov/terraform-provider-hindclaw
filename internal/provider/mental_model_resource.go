@@ -164,7 +164,7 @@ func (r *mentalModelResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.Append(diags...)
 		createReq.SetTags(tags)
 	}
-	if !plan.MaxTokens.IsNull() {
+	if !plan.MaxTokens.IsNull() && !plan.MaxTokens.IsUnknown() {
 		createReq.SetMaxTokens(int32(plan.MaxTokens.ValueInt64()))
 	}
 	if !plan.Trigger.IsNull() && !plan.Trigger.IsUnknown() {
@@ -255,9 +255,9 @@ func (r *mentalModelResource) Update(ctx context.Context, req resource.UpdateReq
 	} else {
 		updateReq.SetTags([]string{})
 	}
-	if !plan.MaxTokens.IsNull() {
+	if !plan.MaxTokens.IsNull() && !plan.MaxTokens.IsUnknown() {
 		updateReq.SetMaxTokens(int32(plan.MaxTokens.ValueInt64()))
-	} else {
+	} else if plan.MaxTokens.IsNull() {
 		updateReq.SetMaxTokensNil()
 	}
 	if !plan.Trigger.IsNull() && !plan.Trigger.IsUnknown() {
