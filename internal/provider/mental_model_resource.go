@@ -360,4 +360,36 @@ func (r *mentalModelResource) readResponseIntoState(ctx context.Context, model *
 	} else {
 		state.MaxTokens = types.Int64Null()
 	}
+	if model.Trigger != nil {
+		trigger := model.Trigger
+
+		// Extract prior trigger lists for null preservation
+		var priorFactTypes, priorExcludeIds types.List
+		priorFactTypes = types.ListNull(types.StringType)
+		priorExcludeIds = types.ListNull(types.StringType)
+		if !state.Trigger.IsNull() && !state.Trigger.IsUnknown() {
+			var prior mentalModelTriggerModel
+			diags.Append(state.Trigger.As(ctx, &prior, basetypes.ObjectAsOptions{})...)
+			priorFactTypes = prior.FactTypes
+			priorExcludeIds = prior.ExcludeMentalModelIds
+		}
+
+		factTypesList, d := stringSliceToTFListPreserveNullOnEmpty(ctx, priorFactTypes, trigger.GetFactTypes())
+		diags.Append(d...)
+		excludeIdsList, d := stringSliceToTFListPreserveNullOnEmpty(ctx, priorExcludeIds, trigger.GetExcludeMentalModelIds())
+		diags.Append(d...)
+
+		triggerAttrs := map[string]attr.Value{
+			"refresh_after_consolidation": types.BoolValue(trigger.GetRefreshAfterConsolidation()),
+			"exclude_mental_models":       types.BoolValue(trigger.GetExcludeMentalModels()),
+			"fact_types":                  factTypesList,
+			"exclude_mental_model_ids":    excludeIdsList,
+		}
+		triggerObj, d := types.ObjectValue(triggerObjectAttrTypes, triggerAttrs)
+		diags.Append(d...)
+		state.Trigger = triggerObj
+	} else {
+		// Defensive: server always returns a trigger, but handle nil gracefully.
+		state.Trigger = types.ObjectNull(triggerObjectAttrTypes)
+	}
 }
