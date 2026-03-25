@@ -8,10 +8,12 @@ import (
 
 	hindsight "github.com/vectorize-io/hindsight/hindsight-clients/go"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,6 +37,23 @@ type mentalModelResourceModel struct {
 	SourceQuery types.String `tfsdk:"source_query"`
 	Tags        types.List   `tfsdk:"tags"`
 	MaxTokens   types.Int64  `tfsdk:"max_tokens"`
+	Trigger     types.Object `tfsdk:"trigger"`
+}
+
+type mentalModelTriggerModel struct {
+	RefreshAfterConsolidation types.Bool `tfsdk:"refresh_after_consolidation"`
+	FactTypes                 types.List `tfsdk:"fact_types"`
+	ExcludeMentalModels       types.Bool `tfsdk:"exclude_mental_models"`
+	ExcludeMentalModelIds     types.List `tfsdk:"exclude_mental_model_ids"`
+}
+
+// triggerObjectAttrTypes is the type map for the trigger nested object.
+// Shared between ObjectValue (read) and ObjectNull (defensive nil branch).
+var triggerObjectAttrTypes = map[string]attr.Type{
+	"refresh_after_consolidation": types.BoolType,
+	"exclude_mental_models":       types.BoolType,
+	"fact_types":                  types.ListType{ElemType: types.StringType},
+	"exclude_mental_model_ids":    types.ListType{ElemType: types.StringType},
 }
 
 type mentalModelResource struct {
@@ -80,6 +99,35 @@ func (r *mentalModelResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Description: "Max tokens for the model content (default 2048).",
 				Optional:    true,
 				Computed:    true,
+			},
+			"trigger": schema.SingleNestedAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Auto-refresh trigger configuration.",
+				Attributes: map[string]schema.Attribute{
+					"refresh_after_consolidation": schema.BoolAttribute{
+						Optional:    true,
+						Computed:    true,
+						Description: "Auto-refresh this mental model after observation consolidation.",
+						Default:     booldefault.StaticBool(false),
+					},
+					"fact_types": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+						Description: "Restrict which fact types the refresh retrieves. Subset of [\"world\", \"experience\", \"observation\"].",
+					},
+					"exclude_mental_models": schema.BoolAttribute{
+						Optional:    true,
+						Computed:    true,
+						Description: "Skip mental model search during refresh.",
+						Default:     booldefault.StaticBool(false),
+					},
+					"exclude_mental_model_ids": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+						Description: "Exclude specific mental models by ID during refresh.",
+					},
+				},
 			},
 		},
 	}
