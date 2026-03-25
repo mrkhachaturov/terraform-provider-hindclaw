@@ -34,9 +34,20 @@ resource "hindclaw_mental_model" "user_profile" {
 
 - `max_tokens` (Number) Max tokens for the model content (default 2048).
 - `tags` (List of String) Tags for the mental model.
+- `trigger` (Attributes) Auto-refresh trigger configuration. (see [below for nested schema](#nestedatt--trigger))
 
 ### Read-Only
 
 - `id` (String) Mental model identifier (computed by server).
+
+<a id="nestedatt--trigger"></a>
+### Nested Schema for `trigger`
+
+Optional:
+
+- `exclude_mental_model_ids` (List of String) Exclude specific mental models by ID during refresh.
+- `exclude_mental_models` (Boolean) Skip mental model search during refresh.
+- `fact_types` (List of String) Restrict which fact types the refresh retrieves. Subset of ["world", "experience", "observation"].
+- `refresh_after_consolidation` (Boolean) Auto-refresh this mental model after observation consolidation.
 
 
