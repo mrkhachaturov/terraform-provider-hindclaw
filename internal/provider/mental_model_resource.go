@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -166,6 +167,20 @@ func (r *mentalModelResource) Create(ctx context.Context, req resource.CreateReq
 	if !plan.MaxTokens.IsNull() {
 		createReq.SetMaxTokens(int32(plan.MaxTokens.ValueInt64()))
 	}
+	if !plan.Trigger.IsNull() && !plan.Trigger.IsUnknown() {
+		var trigger mentalModelTriggerModel
+		diags = plan.Trigger.As(ctx, &trigger, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		apiTrigger, triggerDiags := triggerModelToAPI(ctx, trigger)
+		resp.Diagnostics.Append(triggerDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		createReq.SetTrigger(*apiTrigger)
+	}
 
 	createResp, _, err := r.client.MentalModelsAPI.CreateMentalModel(ctx, plan.BankID.ValueString()).CreateMentalModelRequest(*createReq).Execute()
 	if err != nil {
@@ -245,6 +260,24 @@ func (r *mentalModelResource) Update(ctx context.Context, req resource.UpdateReq
 	} else {
 		updateReq.SetMaxTokensNil()
 	}
+	if !plan.Trigger.IsNull() && !plan.Trigger.IsUnknown() {
+		var trigger mentalModelTriggerModel
+		diags = plan.Trigger.As(ctx, &trigger, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		apiTrigger, triggerDiags := triggerModelToAPI(ctx, trigger)
+		resp.Diagnostics.Append(triggerDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		updateReq.SetTrigger(*apiTrigger)
+	} else if plan.Trigger.IsNull() {
+		// Reset to server default. SetTriggerNil() is NOT usable —
+		// upstream skips the update when trigger is None.
+		updateReq.SetTrigger(*hindsight.NewMentalModelTrigger())
+	}
 
 	model, _, err := r.client.MentalModelsAPI.UpdateMentalModel(ctx, plan.BankID.ValueString(), plan.ID.ValueString()).UpdateMentalModelRequest(*updateReq).Execute()
 	if err != nil {
@@ -284,6 +317,29 @@ func (r *mentalModelResource) ImportState(ctx context.Context, req resource.Impo
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("bank_id"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
+}
+
+// triggerModelToAPI converts a Terraform trigger model to the Hindsight API trigger.
+func triggerModelToAPI(ctx context.Context, trigger mentalModelTriggerModel) (*hindsight.MentalModelTrigger, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	apiTrigger := hindsight.NewMentalModelTrigger()
+	if !trigger.RefreshAfterConsolidation.IsNull() {
+		apiTrigger.SetRefreshAfterConsolidation(trigger.RefreshAfterConsolidation.ValueBool())
+	}
+	if !trigger.FactTypes.IsNull() {
+		var factTypes []string
+		diags.Append(trigger.FactTypes.ElementsAs(ctx, &factTypes, false)...)
+		apiTrigger.SetFactTypes(factTypes)
+	}
+	if !trigger.ExcludeMentalModels.IsNull() {
+		apiTrigger.SetExcludeMentalModels(trigger.ExcludeMentalModels.ValueBool())
+	}
+	if !trigger.ExcludeMentalModelIds.IsNull() {
+		var ids []string
+		diags.Append(trigger.ExcludeMentalModelIds.ElementsAs(ctx, &ids, false)...)
+		apiTrigger.SetExcludeMentalModelIds(ids)
+	}
+	return apiTrigger, diags
 }
 
 func (r *mentalModelResource) readResponseIntoState(ctx context.Context, model *hindsight.MentalModelResponse, state *mentalModelResourceModel, diags *diag.Diagnostics) {
