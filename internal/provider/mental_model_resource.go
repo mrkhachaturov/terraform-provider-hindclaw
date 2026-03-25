@@ -329,6 +329,9 @@ func triggerModelToAPI(ctx context.Context, trigger mentalModelTriggerModel) (*h
 	if !trigger.FactTypes.IsNull() {
 		var factTypes []string
 		diags.Append(trigger.FactTypes.ElementsAs(ctx, &factTypes, false)...)
+		if diags.HasError() {
+			return apiTrigger, diags
+		}
 		apiTrigger.SetFactTypes(factTypes)
 	}
 	if !trigger.ExcludeMentalModels.IsNull() {
@@ -337,6 +340,9 @@ func triggerModelToAPI(ctx context.Context, trigger mentalModelTriggerModel) (*h
 	if !trigger.ExcludeMentalModelIds.IsNull() {
 		var ids []string
 		diags.Append(trigger.ExcludeMentalModelIds.ElementsAs(ctx, &ids, false)...)
+		if diags.HasError() {
+			return apiTrigger, diags
+		}
 		apiTrigger.SetExcludeMentalModelIds(ids)
 	}
 	return apiTrigger, diags
